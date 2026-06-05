@@ -127,13 +127,14 @@ recipeList:
 type: specs.openrewrite.org/v1beta/recipe
 name: org.openrewrite.java.logging.slf4j.Log4j1ToSlf4jMdc
 displayName: Migrate Log4j 1.x MDC to SLF4J MDC
-description: Migrates `org.apache.log4j.MDC` to `org.slf4j.MDC`, wrapping non-`String` `put` values in `String.valueOf(...)`.
+description: Migrates `org.apache.log4j.MDC` to `org.slf4j.MDC`, wrapping non-`String` `put` values in `String.valueOf(...)` and converting `getContext()` to `getCopyOfContextMap()`.
 tags:
   - logging
   - slf4j
   - log4j
 recipeList:
   - org.openrewrite.java.logging.slf4j.WrapLog4j1MdcPutValueInStringValueOf
+  - org.openrewrite.java.logging.slf4j.Log4j1MdcGetContextToCopyOfContextMap
   - org.openrewrite.java.ChangeType:
       oldFullyQualifiedTypeName: org.apache.log4j.MDC
       newFullyQualifiedTypeName: org.slf4j.MDC
