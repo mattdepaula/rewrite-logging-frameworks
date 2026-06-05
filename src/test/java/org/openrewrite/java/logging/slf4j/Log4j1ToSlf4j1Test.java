@@ -221,4 +221,31 @@ class Log4j1ToSlf4j1Test implements RewriteTest {
           )
         );
     }
+
+    @Test
+    void migrateMdcPutWithNonStringValueWrapsInStringValueOf() {
+        //language=java
+        rewriteRun(
+          java(
+            """
+              import org.apache.log4j.MDC;
+
+              class Test {
+                  static void method(Object value) {
+                      MDC.put("key", value);
+                  }
+              }
+              """,
+            """
+              import org.slf4j.MDC;
+
+              class Test {
+                  static void method(Object value) {
+                      MDC.put("key", String.valueOf(value));
+                  }
+              }
+              """
+          )
+        );
+    }
 }
