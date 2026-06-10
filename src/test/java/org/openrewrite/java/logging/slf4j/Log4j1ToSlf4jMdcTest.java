@@ -30,12 +30,12 @@ class Log4j1ToSlf4jMdcTest implements RewriteTest {
     public void defaults(RecipeSpec spec) {
         spec.recipeFromResources("org.openrewrite.java.logging.slf4j.Log4j1ToSlf4jMdc")
           .parser(JavaParser.fromJavaVersion()
-            .classpathFromResources(new InMemoryExecutionContext(), "log4j-1.2.+"));
+            .classpathFromResources(new InMemoryExecutionContext(), "log4j-1.2.+", "slf4j-api-2"));
     }
 
     @DocumentExample
     @Test
-    void fullImportSwap() {
+    void replacePatterns() {
         //language=java
         rewriteRun(
           java(
@@ -76,52 +76,21 @@ class Log4j1ToSlf4jMdcTest implements RewriteTest {
     }
 
     @Test
-    void clearUntouched() {
+    void doNotReplaceInvalidPatterns() {
         //language=java
         rewriteRun(
           java(
             """
-              import org.apache.log4j.MDC;
-
-              class Test {
-                  void method() {
-                      MDC.clear();
-                  }
-              }
-              """,
-            """
               import org.slf4j.MDC;
 
+              import java.util.Map;
+
               class Test {
-                  void method() {
+                  void method(String text) {
+                      MDC.put("text", text);
+                      Map<String, String> context = MDC.getCopyOfContextMap();
+                      MDC.remove("text");
                       MDC.clear();
-                  }
-              }
-              """
-          )
-        );
-    }
-
-    @Test
-    void removeUntouched() {
-        //language=java
-        rewriteRun(
-          java(
-            """
-              import org.apache.log4j.MDC;
-
-              class Test {
-                  void method() {
-                      MDC.remove("key");
-                  }
-              }
-              """,
-            """
-              import org.slf4j.MDC;
-
-              class Test {
-                  void method() {
-                      MDC.remove("key");
                   }
               }
               """

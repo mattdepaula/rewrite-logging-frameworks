@@ -15,6 +15,7 @@
  */
 package org.openrewrite.java.logging.slf4j;
 
+import lombok.Getter;
 import org.openrewrite.Cursor;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Preconditions;
@@ -29,10 +30,21 @@ import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.TypeUtils;
 
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 public class WrapLog4j1MdcPutValueInStringValueOf extends Recipe {
 
     private static final MethodMatcher PUT = new MethodMatcher("org.apache.log4j.MDC put(String, Object)");
     private static final MethodMatcher STRING_VALUE_OF = new MethodMatcher("java.lang.String valueOf(..)");
+
+    @Getter
+    final Set<String> tags = new HashSet<>(Arrays.asList("logging", "slf4j", "log4j"));
+
+    @Getter
+    final Duration estimatedEffortPerOccurrence = Duration.ofSeconds(10);
 
     @Override
     public String getDisplayName() {
