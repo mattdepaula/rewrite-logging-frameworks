@@ -35,7 +35,7 @@ class WrapLog4j1MdcPutValueInStringValueOfTest implements RewriteTest {
 
     @DocumentExample
     @Test
-    void wrapsNonStringValues() {
+    void replacePatterns() {
         //language=java
         rewriteRun(
           java(
@@ -46,11 +46,17 @@ class WrapLog4j1MdcPutValueInStringValueOfTest implements RewriteTest {
               import java.util.function.Supplier;
 
               class Test {
-                  void method(Map<String, String> map, Object obj, Throwable t, Supplier<String> supplier) {
+                  void method(Map<String, String> map, Object obj, Throwable t, Supplier<String> supplier, int count) {
                       MDC.put("map", map);
                       MDC.put("obj", obj);
                       MDC.put("throwable", t);
                       MDC.put("supplier", supplier);
+                      MDC.put("count", count);
+                      MDC.put("call", compute());
+                  }
+
+                  Object compute() {
+                      return new Object();
                   }
               }
               """,
@@ -61,11 +67,17 @@ class WrapLog4j1MdcPutValueInStringValueOfTest implements RewriteTest {
               import java.util.function.Supplier;
 
               class Test {
-                  void method(Map<String, String> map, Object obj, Throwable t, Supplier<String> supplier) {
+                  void method(Map<String, String> map, Object obj, Throwable t, Supplier<String> supplier, int count) {
                       MDC.put("map", String.valueOf(map));
                       MDC.put("obj", String.valueOf(obj));
                       MDC.put("throwable", String.valueOf(t));
                       MDC.put("supplier", String.valueOf(supplier));
+                      MDC.put("count", String.valueOf(count));
+                      MDC.put("call", String.valueOf(compute()));
+                  }
+
+                  Object compute() {
+                      return new Object();
                   }
               }
               """
@@ -74,70 +86,26 @@ class WrapLog4j1MdcPutValueInStringValueOfTest implements RewriteTest {
     }
 
     @Test
-    void untouchedStringLiteral() {
+    void doNotReplaceInvalidPatterns() {
         //language=java
         rewriteRun(
           java(
             """
               import org.apache.log4j.MDC;
 
-              class Test {
-                  void method() {
-                      MDC.put("key", "value");
+              class Other {
+                  void put(String key, Object value) {
                   }
               }
-              """
-          )
-        );
-    }
-
-    @Test
-    void untouchedTypedString() {
-        //language=java
-        rewriteRun(
-          java(
-            """
-              import org.apache.log4j.MDC;
 
               class Test {
-                  void method(String value) {
-                      MDC.put("key", value);
-                  }
-              }
-              """
-          )
-        );
-    }
-
-    @Test
-    void untouchedNull() {
-        //language=java
-        rewriteRun(
-          java(
-            """
-              import org.apache.log4j.MDC;
-
-              class Test {
-                  void method() {
-                      MDC.put("key", null);
-                  }
-              }
-              """
-          )
-        );
-    }
-
-    @Test
-    void untouchedAlreadyWrapped() {
-        //language=java
-        rewriteRun(
-          java(
-            """
-              import org.apache.log4j.MDC;
-
-              class Test {
-                  void method(Object value) {
-                      MDC.put("key", String.valueOf(value));
+                  void method(String value, Object obj, Other other) {
+                      MDC.put("literal", "value");
+                      MDC.put("typed", value);
+                      MDC.put("null", null);
+                      MDC.put("wrapped", String.valueOf(obj));
+                      MDC.put("fqn", java.lang.String.valueOf(obj));
+                      other.put("notMdc", obj);
                   }
               }
               """
